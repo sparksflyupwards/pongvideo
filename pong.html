@@ -1,0 +1,154 @@
+<html>
+
+<head>
+	<style>
+		#canva { cursor: none; }
+	</style>
+</head>
+
+<body>
+
+<canvas id="canva" height="500px" width="500px"/>
+
+<script>
+const c = document.getElementById("canva");
+const gameWidth = 500,
+  gameHeight = 500,
+  paddleWidth = 10,
+  paddleHeight = 100;
+
+const ctx = c.getContext("2d");
+
+window.addEventListener("mousemove", e => updatePaddle(e));
+
+let paddle = { x: 10, y: 0 };
+let ball = {
+  x: gameWidth / 2 - 50,
+  y: gameHeight / 2 - 50,
+  radius: 8,
+  xVelocity: -5,
+  yVelocity: 5
+};
+let ai = { x: gameWidth - paddleWidth - 10, y: 0, direction: "down", speed: 5 };
+
+let timer = setInterval(gameLoop, 50);
+function updatePaddle(e) {
+  //update our paddle
+  if (e.y < gameHeight - paddleHeight) paddle.y = e.y;
+  else paddle.y = gameHeight - paddleHeight;
+}
+
+function checkCollision() {
+  let AABBIntersect = function(ax, ay, aw, ah, bx, by, bw, bh) {
+    return ax < bx + bw && ay < by + bh && bx < ax + aw && by < ay + ah;
+  };
+
+  //ball collides with player paddle
+  if (
+    AABBIntersect(
+      paddle.x + paddleWidth,
+      paddle.y,
+      paddleWidth,
+      paddleHeight,
+      ball.x,
+      ball.y,
+      ball.radius * 2,
+      ball.radius * 2
+    )
+  ) {
+    ball.xVelocity = (ball.xVelocity) * -1;
+    if (ball.y > paddle.y + paddleHeight / 2)
+      ball.yVelocity = (ball.yVelocity) * -1;
+  }
+
+  //ball collides with ai paddle
+  if (
+    AABBIntersect(
+      ai.x + paddleWidth,
+      ai.y,
+      paddleWidth,
+      paddleHeight,
+      ball.x,
+      ball.y,
+      ball.radius * 2,
+      ball.radius * 2
+    )
+  ) {
+    ball.xVelocity = (ball.xVelocity) * -1;
+    if (ball.y > paddle.y + paddleHeight / 2)
+      ball.yVelocity = (ball.yVelocity) * -1;
+  	ai.speed +=1.5;
+  }
+
+  //ball collides with walls
+  if (ball.y <= 0 || ball.y >= gameHeight) {
+    ball.yVelocity = ball.yVelocity * -1;
+  }
+
+  //player loses leaves the game
+  if (ball.x <= 0) {
+    ctx.font = "20px Arial";
+    ctx.fillStyle = "white";
+    ctx.fillText(
+      "You Lose",
+      gameWidth / 2 - 70,
+      gameHeight / 2 - 10
+    );
+  }
+  //ai loses
+  if (ball.x >= gameWidth) {
+    ctx.font = "20px Arial";
+    ctx.fillStyle = "white";
+    ctx.fillText(
+      "You Win",
+      gameWidth / 2 - 70,
+      gameHeight / 2 - 10
+    );
+  }
+}
+function gameLoop() {
+  //clear the canvas
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, c.width, c.height);
+
+  checkCollision();
+
+  //update our ball
+  ball.x += ball.xVelocity;
+  ball.y += ball.yVelocity;
+
+  //update our AI
+  if (ball.y >= ai.y + paddleHeight / 2-25) {
+    ai.direction = "down";
+  } else {
+    ai.direction = "up";
+  }
+
+
+  if (ai.direction == "up") {
+    ai.y = ai.y - ai.speed;
+  } else {
+    ai.y = ai.y + ai.speed;
+  }
+
+  //draw our paddle
+  ctx.fillStyle = "white";
+  ctx.fillRect(paddle.x, paddle.y, paddleWidth, paddleHeight);
+
+  //draw our paddle
+  ctx.fillStyle = "white";
+  ctx.fillRect(ai.x, ai.y, paddleWidth, paddleHeight);
+
+  //draw our ball
+  ctx.beginPath();
+  ctx.fillStyle = "white";
+  ctx.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI, false);
+  ctx.fill();
+
+  
+}
+
+</script>
+</body>
+</html>
+

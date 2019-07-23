@@ -1,0 +1,98 @@
+<html>
+<body>
+	<canvas id="canvas" width ="500" height = "500"/>
+	<script>
+		const canvas = document.getElementById("canvas");
+
+		const ctx = canvas.getContext("2d");
+		const gameWidth = canvas.width, gameHeight = canvas.height, gameSpeed = 50;
+		const paddleHeight = 100, paddleWidth = 10, paddlePadding = 10; // make this Object oriented
+
+		let ball = 
+		{x: gameWidth/2-50, y: gameHeight/2 - 50,
+		 radius: 8,
+		 xVelocity: 5,
+		 yVelocity: 9,
+		 update: function update(){ball.x += this.xVelocity; ball.y += this.yVelocity;} }
+
+		let ai = 
+		{x: gameWidth-paddleWidth - paddlePadding,
+		 y:0,
+		 speed: ball.yVelocity,
+		 velocity: ball.yVelocity,
+		 width: paddleWidth,
+		 height: paddleHeight,
+		 update: function update (){
+		 		if(ai.y+paddleHeight/2>ball.y+ball.radius){
+		 			this.velocity = ai.speed * -1;
+		 		}
+		 		else {
+		 			ai.velocity = ai.speed;
+		 		}
+
+		 		ai.y = ai.y + ai.velocity;
+		 }
+		}
+		let player = {x:0+paddlePadding, y:0, width: paddleWidth, height: paddleHeight}
+
+		window.addEventListener("mousemove", e => updatePaddle(e));
+
+		function updatePaddle(e){
+			e.y>=gameHeight-paddleHeight ? player.y=gameHeight-paddleHeight : player.y = e.y;
+		}
+
+		let gameTimer = setInterval(gameLoop, gameSpeed);
+
+		function checkCollisions(){
+			if(ball.y+ball.radius*2>gameHeight||ball.y<=0){
+					ball.yVelocity=ball.yVelocity*-1;
+			}
+
+			if (AABBIntersect(ai.x,ai.y,ai.width,ai.height,ball.x-ball.radius,ball.y-ball.radius,ball.radius*2,ball.radius*2)){
+
+				ball.xVelocity = ball.xVelocity *-1;
+				if(ball.y<=ai.y+ai.height/2)
+				ball.yVelocity = ball.yVelocity *-1;
+			}
+
+			if (AABBIntersect(player.x,player.y,player.width,player.height,ball.x-ball.radius,ball.y-ball.radius,ball.radius*2,ball.radius*2)){
+				ball.xVelocity = ball.xVelocity *-1;
+
+				if(ball.y>player.y+player.height/2)
+				ball.yVelocity = ball.yVelocity *-1;
+			}
+
+
+		}
+
+	  		let AABBIntersect = function(ax, ay, aw, ah, bx, by, bw, bh) {
+	   		 return ax < bx + bw && ay < by + bh && bx < ax + aw && by < ay + ah;
+	  			};
+
+		function gameLoop(){
+			//update the ball
+			ball.update();
+			ai.update();
+			checkCollisions();
+
+			//draw board
+			ctx.fillStyle = "black";
+			ctx.fillRect(0,0,gameWidth,gameHeight);
+
+			//draw paddle
+			ctx.fillStyle = "white";
+			ctx.fillRect(player.x,player.y,player.width,player.height);
+
+			//draw paddle
+			ctx.fillStyle = "white";
+			ctx.fillRect(ai.x,ai.y,ai.width,ai.height);
+
+			//draw ball
+			ctx.fillStyle = "white"
+			ctx.beginPath();
+			ctx.arc(ball.x,ball.y,ball.radius,0,2*Math.PI,false);
+			ctx.fill();
+		}
+	</script>
+</body>
+</html>
